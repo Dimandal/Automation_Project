@@ -30,4 +30,22 @@ tar -cvf ${myname}-httpd-logs-${timestamp}.tar log
 aws s3 \
 cp /tmp/${myname}-httpd-logs-${timestamp}.tar \
 s3://${s3_bucket}/${myname}-httpd-logs-${timestamp}.tar
+#ectract info to html file
+if [ ! -f /var/www/html/inventory.html ]
+then
+        touch /var/www/html/inventory.html
+        echo -e '\t'LogType'\t''\t'Date Created'\t''\t'Type'\t'Size >> /var/www/html/inventory.html
+else
+        echo "Inventory.html file exists"
+fi
+type=$(ls -ltr /tmp/${myname}-httpd-logs-${timestamp}.tar|awk '{print $9}'| cut -d'.' -f2)
+size=$(ls -lah /tmp/${myname}-httpd-logs-${timestamp}.tar| awk '{ print $5}')
+log_type=$(ls -ltr /tmp/${myname}-httpd-logs-${timestamp}.tar|awk '{print $9}'| cut -d'-' -f2-3)
+echo -e '\n''\t'$log_type'\t'$timestamp'\t''\t'$type'\t'$size >> /var/www/html/inventory.html
 rm -rf /tmp/log
+#to schedule cron
+if [ ! -f /etc/cron.d/automation ]
+then
+        touch /etc/cron.d/automation
+                grep 'root /root/Automation_Project/automation.sh' /etc/cron.d/automation || echo '0 10 * * * root /root/Automation_Project/automation.sh' >> /etc/cron.d/automation
+fi
